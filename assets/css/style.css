@@ -1,0 +1,99 @@
+/* --- Styles généraux --- */
+:root {
+  --primary-dark: #1a1a1d;
+  --panel-dark: #2b2b30;
+  --accent: #3498db;
+  --accent-dark: #2980b9;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  background: var(--primary-dark);
+  color: #f0f0f0;
+  min-height: 100vh;
+}
+
+/* --- Bandeau supérieur --- */
+.site-header {
+  background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+  text-align: center;
+  padding: 2rem 1rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
+
+.site-header h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  color: #fff;
+  letter-spacing: 1px;
+}
+
+.site-header p {
+  margin: 0.5rem 0 0;
+  font-weight: 300;
+  color: #ccc;
+}
+
+/* --- Disposition principale --- */
+.container {
+  display: flex;
+  flex-direction: column;  /* Mobile d’abord */
+  gap: 1.5rem;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: auto;
+}
+
+.search,
+.results {
+  background: var(--panel-dark);
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+/* Formulaire de recherche */
+.search form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.search label {
+  font-weight: 600;
+}
+
+.search input[type="text"] {
+  padding: 0.6rem;
+  border: none;
+  border-radius: 6px;
+  background: #444;
+  color: #fff;
+}
+
+.search button {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+.search button:hover {
+  background: var(--accent-dark);
+}
+
+/* --- Responsive pour tablette/desktop --- */
+@media (min-width: 768px) {
+  .container {
+    flex-direction: row;      /* champ gauche, résultats droite */
+    align-items: flex-start;
+  }
+  .search,
+  .results {
+    flex: 1;
+  }
+}
