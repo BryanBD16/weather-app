@@ -52,11 +52,17 @@ async function getCityWeather(city) {
     const weatherIconClass = iconMap[iconCode];
 
     results.innerHTML = `
+    <div class="row">
     <h2>Weather in ${cityName}</h2>
-    <p><i class="wi ${weatherIconClass}"></i> ${description}</p>
+    <div class="col-6">
+    <h2><i class="wi ${weatherIconClass}"></i> ${description}</h2>
     <p>Temperature : ${tempCelsius.toFixed(1)} °C</p>
+    </div>
+    <div class="col-6">
     <p>Humidity : ${humidity}%</p>
     <p>Wind : ${windSpeed} m/s</p>
+    </div>
+    </div>
     `;
 
   } catch (error) {
