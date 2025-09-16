@@ -27,6 +27,56 @@ const form = document.getElementById("weatherForm");
 const input = document.getElementById("city");
 const results = document.getElementById("results");
 
+// Obtenir la position de l'utilisateur
+if ("geolocation" in navigator) {
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const latitude = position.coords.latitude;
+      const longitude = position.coords.longitude;
+      getWeatherByCoords(latitude,longitude)
+    },
+    (error) => {
+      console.error("Erreur géolocalisation :", error);
+    }
+  );
+} else {
+  console.log("Géolocalisation non supportée par ce navigateur");
+}
+
+async function getWeatherByCoords(lat, lon) {
+  try {
+    const response = await fetch(
+      `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}`
+    );
+    if (!response.ok) throw new Error("Problème avec l'API");
+    const data = await response.json();
+    const cityName = data.name;
+    const tempKelvin = data.main.temp;
+    const tempCelsius = tempKelvin - 273.15;
+    const description = data.weather[0].description;
+    const windSpeed = data.wind.speed;
+    const humidity = data.main.humidity;
+    const iconCode = data.weather[0].icon;
+    const weatherIconClass = iconMap[iconCode];
+
+    results.innerHTML = `
+    <div class="row">
+    <h2>Weather in ${cityName}</h2>
+    <div class="col-6">
+    <h2><i class="wi ${weatherIconClass}"></i> ${description}</h2>
+    <p>Temperature : ${tempCelsius.toFixed(1)} °C</p>
+    </div>
+    <div class="col-6">
+    <p>Humidity : ${humidity}%</p>
+    <p>Wind : ${windSpeed} m/s</p>
+    </div>
+    </div>
+    `;
+  } catch (err) {
+    console.error(err);
+  }
+}
+
 // Fonction qui sera appelée quand le formulaire est soumis
 function handleFormSubmit(event) {
     event.preventDefault();
