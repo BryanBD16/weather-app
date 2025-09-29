@@ -19,6 +19,7 @@
     <div class="row g-4 justify-content-around">
       <!-- Section recherche -->
       <section class="search col-12 col-md-4">
+        <h2 class="mb-3 text-center">Search your city</h2>
         <div class="card bg-secondary-subtle text-dark shadow">
           <div class="card-body">
             <form id="weatherForm" class="d-grid gap-3">
@@ -30,14 +31,60 @@
           </div>
         </div>
       </section>
-
-      <!-- Section résultats -->
-      <section class="results col-12 col-md-6">
+      <!-- Section résultats actuels -->
+    <section class="results col-12 col-md-6">
+      <h2 class="mb-3 text-center">Actual weather in <span id="cityName">—</span></h2>
         <div id="results" class="card bg-secondary-subtle text-dark shadow p-4">
-          <!-- Résultats insérés ici -->
+            <div class="row">
+            <div class="col-6">
+                <h2>
+                <i id="weatherIcon" class="wi"></i>
+                <span id="description">—</span>
+                </h2>
+                <h4>🌡️ <span id="temp">—</span> °C</h4>
+            </div>
+
+            <div class="col-6">
+                <h4>💧 <span id="humidity">—</span>%</h4>
+                <h4>💨 <span id="wind">—</span> m/s</h4>
+            </div>
+            </div>
         </div>
-      </section>
+    </section>
     </div>
+    <div class="container py-4">
+
+    <!-- Météo sur 24 h -->
+    <section>
+      <h2 class="mb-3 text-center">Next 24 hours</h2>
+      <div class="overflow-auto">
+        <div id="hourly-forecast" class="d-flex flex-row gap-3">
+          <!-- hour 1 -->
+          <div class="card text-center p-2 flex-shrink-0" style="min-width: 120px;">
+            <h6 class="fw-bold">14:00</h6>
+            <!-- hour 1 <img src="ICON_URL" class="mx-auto" alt="icon météo" width="60"> -->
+            <div class="mt-2">
+              <div>🌡️ 18 °C</div>
+              <div>💨 12 km/h</div>
+              <div>💧 65 %</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <hr class="my-5">
+
+    <!-- Prévisions 5 jours -->
+    <section>
+      <h2 class="mb-3 text-center">5 days forecast</h2>
+      <div id="daily-forecast" class="row g-3">
+
+      </div>
+    </section>
+
+  </div>
   </main>
 
   <script src="src/app.js"></script>

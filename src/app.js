@@ -1,5 +1,6 @@
 const apiKey = "9c8df6cfe7964a0cb5421f997063669d";
 
+//#region icons const
 const iconMap = {
   "01d": "wi-day-sunny",
   "01n": "wi-night-clear",
@@ -20,12 +21,21 @@ const iconMap = {
   "50d": "wi-fog",
   "50n": "wi-fog"
 };
-
+//#endregion icons const
 
 // Sélection des éléments
 const form = document.getElementById("weatherForm");
 const input = document.getElementById("city");
-const results = document.getElementById("results");
+const hourlyForecast = document.getElementById("hourly-forecast");
+const dailyForecast = document.getElementById("daily-forecast");
+
+// Sélecteurs météo
+const cityNameEl   = document.getElementById("cityName");
+const descriptionEl= document.getElementById("description");
+const tempEl       = document.getElementById("temp");
+const humidityEl   = document.getElementById("humidity");
+const windEl       = document.getElementById("wind");
+const iconEl       = document.getElementById("weatherIcon");
 
 // Obtenir la position de l'utilisateur
 if ("geolocation" in navigator) {
@@ -33,7 +43,8 @@ if ("geolocation" in navigator) {
     (position) => {
       const latitude = position.coords.latitude;
       const longitude = position.coords.longitude;
-      getWeatherByCoords(latitude,longitude)
+      getWeatherByCoords(latitude,longitude);
+      getDailyWeatherByCoords(latitude,longitude);
     },
     (error) => {
       console.error("Erreur géolocalisation :", error);
@@ -50,32 +61,85 @@ async function getWeatherByCoords(lat, lon) {
     );
     if (!response.ok) throw new Error("Problème avec l'API");
     const data = await response.json();
-    const cityName = data.name;
-    const tempKelvin = data.main.temp;
-    const tempCelsius = tempKelvin - 273.15;
-    const description = data.weather[0].description;
-    const windSpeed = data.wind.speed;
-    const humidity = data.main.humidity;
-    const iconCode = data.weather[0].icon;
-    const weatherIconClass = iconMap[iconCode];
 
-    results.innerHTML = `
-    <div class="row">
-    <h2>Weather in ${cityName}</h2>
-    <div class="col-6">
-    <h2><i class="wi ${weatherIconClass}"></i> ${description}</h2>
-    <p>Temperature : ${tempCelsius.toFixed(1)} °C</p>
-    </div>
-    <div class="col-6">
-    <p>Humidity : ${humidity}%</p>
-    <p>Wind : ${windSpeed} m/s</p>
-    </div>
-    </div>
-    `;
+    // Conversion température
+    const tempCelsius = data.main.temp - 273.15;
+
+    // Remplissage du contenu
+    cityNameEl.textContent   = data.name;
+    descriptionEl.textContent= data.weather[0].description;
+    tempEl.textContent       = tempCelsius.toFixed(1);
+    humidityEl.textContent   = data.main.humidity;
+    windEl.textContent       = data.wind.speed;
+
+    // Mise à jour de l'icône (on remplace complètement la className)
+    iconEl.className = "wi " + iconMap[data.weather[0].icon];
+
   } catch (err) {
     console.error(err);
   }
 }
+
+async function getDailyWeatherByCoords(lat, lon) {
+  try {
+    const response = await fetch(
+      `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`
+    );
+    if (!response.ok) throw new Error("Problème avec l'API");
+    const data = await response.json();
+
+    const dailyForecast = document.getElementById("daily-forecast");
+    if (!dailyForecast) return;
+
+    dailyForecast.innerHTML = ""; // on efface le contenu existant
+
+    // Sélectionner l'item le plus proche de midi pour chaque jour
+    const daysMap = {};
+    data.list.forEach(item => {
+      const date = new Date(item.dt * 1000);
+      const key = date.toISOString().slice(0, 10); // YYYY-MM-DD
+      const hour = date.getHours();
+
+      if (!daysMap[key]) {
+        daysMap[key] = item;
+      } else {
+        const currentHour = new Date(daysMap[key].dt * 1000).getHours();
+        if (Math.abs(hour - 12) < Math.abs(currentHour - 12)) {
+          daysMap[key] = item;
+        }
+      }
+    });
+
+    const dayKeys = Object.keys(daysMap).slice(0, 5); // max 5 jours
+
+    dayKeys.forEach(key => {
+      const day = daysMap[key];
+
+      const date = new Date(day.dt * 1000);
+      const dayName = date.toLocaleDateString("fr-FR", { weekday: "long" });
+      const iconClass = iconMap[day.weather[0].icon] || "wi-na";
+
+      const col = document.createElement("div");
+      col.className = "col-12 col-md-6 col-lg-3";
+      col.innerHTML = `
+        <div class="card h-100 text-center p-3">
+          <h5 class="fw-bold">${dayName.charAt(0).toUpperCase() + dayName.slice(1)}</h5>
+          <i class="wi ${iconClass} display-1 my-2"></i>
+          <div>🌡️ ${Math.round(day.main.temp)} °C</div>
+          <div>💨 ${Math.round(day.wind.speed)} km/h</div>
+          <div>💧 ${day.main.humidity}%</div>
+        </div>
+      `;
+
+      dailyForecast.appendChild(col);
+    });
+
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+
 
 // Fonction qui sera appelée quand le formulaire est soumis
 function handleFormSubmit(event) {
@@ -92,28 +156,18 @@ async function getCityWeather(city) {
     }
     const data = await response.json();
 
-    const cityName = data.name;
-    const tempKelvin = data.main.temp;
-    const tempCelsius = tempKelvin - 273.15;
-    const description = data.weather[0].description;
-    const windSpeed = data.wind.speed;
-    const humidity = data.main.humidity;
-    const iconCode = data.weather[0].icon;
-    const weatherIconClass = iconMap[iconCode];
+    // Conversion température
+    const tempCelsius = data.main.temp - 273.15;
 
-    results.innerHTML = `
-    <div class="row">
-    <h2>Weather in ${cityName}</h2>
-    <div class="col-6">
-    <h2><i class="wi ${weatherIconClass}"></i> ${description}</h2>
-    <p>Temperature : ${tempCelsius.toFixed(1)} °C</p>
-    </div>
-    <div class="col-6">
-    <p>Humidity : ${humidity}%</p>
-    <p>Wind : ${windSpeed} m/s</p>
-    </div>
-    </div>
-    `;
+    // Remplissage du contenu
+    cityNameEl.textContent   = data.name;
+    descriptionEl.textContent= data.weather[0].description;
+    tempEl.textContent       = tempCelsius.toFixed(1);
+    humidityEl.textContent   = data.main.humidity;
+    windEl.textContent       = data.wind.speed;
+
+    // Mise à jour de l'icône (on remplace complètement la className)
+    iconEl.className = "wi " + iconMap[data.weather[0].icon];
 
   } catch (error) {
     console.error("Erreur :", error);
@@ -122,4 +176,7 @@ async function getCityWeather(city) {
 
 // On passe la fonction au listener
 form.addEventListener("submit", handleFormSubmit);
+
+
+
 
