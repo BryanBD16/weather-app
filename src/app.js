@@ -90,26 +90,22 @@ async function getDailyWeatherByCoords(lat, lon) {
 
     const dailyForecast = document.getElementById("daily-forecast");
     if (!dailyForecast) return;
+    dailyForecast.innerHTML = "";
 
-    dailyForecast.innerHTML = ""; // on efface le contenu existant
+    const hourlyForecast = document.getElementById("hourly-forecast");
+    if (!hourlyForecast) return;
+    hourlyForecast.innerHTML = "";
 
-    // Sélectionner l'item le plus proche de midi pour chaque jour
+    //days forecast
     const daysMap = {};
     data.list.forEach(item => {
-      const date = new Date(item.dt * 1000);
-      const key = date.toISOString().slice(0, 10); // YYYY-MM-DD
-      const hour = date.getHours();
+      const key = item.dt_txt.slice(0, 10); // YYYY-MM-DD
+      const hour = item.dt_txt.slice(11, 13);// HH
 
-      if (!daysMap[key]) {
+      if (hour == "18") {
         daysMap[key] = item;
-      } else {
-        const currentHour = new Date(daysMap[key].dt * 1000).getHours();
-        if (Math.abs(hour - 12) < Math.abs(currentHour - 12)) {
-          daysMap[key] = item;
-        }
       }
     });
-
     const dayKeys = Object.keys(daysMap).slice(0, 5); // max 5 jours
 
     dayKeys.forEach(key => {
@@ -122,16 +118,50 @@ async function getDailyWeatherByCoords(lat, lon) {
       const col = document.createElement("div");
       col.className = "col-12 col-md-6 col-lg-3";
       col.innerHTML = `
-        <div class="card h-100 text-center p-3">
-          <h5 class="fw-bold">${dayName.charAt(0).toUpperCase() + dayName.slice(1)}</h5>
+        <div class="card text-center p-2 flex-shrink-0" style="min-width: 120px;">
+          <h6 class="fw-bold">${dayName.charAt(0).toUpperCase() + dayName.slice(1)}</h6>
           <i class="wi ${iconClass} display-1 my-2"></i>
-          <div>🌡️ ${Math.round(day.main.temp)} °C</div>
-          <div>💨 ${Math.round(day.wind.speed)} km/h</div>
-          <div>💧 ${day.main.humidity}%</div>
+            <div class="mt-2">
+              <div>🌡️ ${Math.round(day.main.temp)} °C</div>
+              <div>💨 ${Math.round(day.wind.speed)} km/h</div>
+              <div>💧 ${day.main.humidity}%</div>
+            </div>
         </div>
       `;
 
       dailyForecast.appendChild(col);
+    });
+
+    //hours forecast
+
+    const hoursMap = {};
+      data.list.forEach(item => {
+      const key = item.dt_txt;
+      hoursMap[key] = item;
+    });
+    const hoursKeys = Object.keys(hoursMap).slice(0, 8); // 24 prochaines heures
+
+     hoursKeys.forEach(key => {
+      const hour = hoursMap[key];
+
+      const date = new Date(hour.dt * 1000);
+      const iconClass = iconMap[hour.weather[0].icon] || "wi-na";
+
+      const col = document.createElement("div");
+      col.className = "col-12 col-md-6 col-lg-3";
+      col.innerHTML = `
+          <div class="card text-center p-2 flex-shrink-0" style="min-width: 120px;">
+            <h6 class="fw-bold">${date.getHours()} H</h6>
+            <i class="wi ${iconClass} display-1 my-2"></i>
+            <div class="mt-2">
+              <div>🌡️ ${Math.round(hour.main.temp)} °C</div>
+              <div>💨 ${Math.round(hour.wind.speed)} km/h</div>
+              <div>💧 ${hour.main.humidity}%</div>
+            </div>
+          </div>
+      `;
+
+      hourlyForecast.appendChild(col);
     });
 
   } catch (err) {
@@ -146,12 +176,14 @@ function handleFormSubmit(event) {
     event.preventDefault();
     const cityName = input.value.trim(); 
     getCityWeather(cityName);
+    getDailyCityWeather(cityName);
 }
 
 async function getCityWeather(city) {
   try {
     const response = await fetch("https://api.openweathermap.org/data/2.5/weather?q="+city+"&appid="+apiKey);
     if (!response.ok) {
+      alert("Veuillez renseigner un nom de ville valide");
       throw new Error("Problème avec l'API");
     }
     const data = await response.json();
@@ -168,6 +200,96 @@ async function getCityWeather(city) {
 
     // Mise à jour de l'icône (on remplace complètement la className)
     iconEl.className = "wi " + iconMap[data.weather[0].icon];
+
+  } catch (error) {
+    console.error("Erreur :", error);
+  }
+}
+
+async function getDailyCityWeather(city) {
+  try {                         
+    const response = await fetch("https://api.openweathermap.org/data/2.5/forecast?q="+city+"&units=metric&appid="+apiKey);
+    if (!response.ok) {
+      throw new Error("Problème avec l'API");
+    }
+    const data = await response.json();
+
+    const dailyForecast = document.getElementById("daily-forecast");
+    if (!dailyForecast) return;
+    dailyForecast.innerHTML = "";
+
+    const hourlyForecast = document.getElementById("hourly-forecast");
+    if (!hourlyForecast) return;
+    hourlyForecast.innerHTML = "";
+
+    // days forecast
+   const daysMap = {};
+    data.list.forEach(item => {
+      const key = item.dt_txt.slice(0, 10); // YYYY-MM-DD
+      const hour = item.dt_txt.slice(11, 13);
+
+      if (hour == "18") {
+        daysMap[key] = item;
+      }
+    });
+
+    const dayKeys = Object.keys(daysMap).slice(0, 5); // max 5 jours
+
+    dayKeys.forEach(key => {
+      const day = daysMap[key];
+
+      const date = new Date(day.dt * 1000);
+      const dayName = date.toLocaleDateString("fr-FR", { weekday: "long" });
+      const iconClass = iconMap[day.weather[0].icon] || "wi-na";
+
+      const col = document.createElement("div");
+      col.className = "col-12 col-md-6 col-lg-3";
+      col.innerHTML = `
+        <div class="card text-center p-2 flex-shrink-0" style="min-width: 120px;">
+          <h6 class="fw-bold">${dayName.charAt(0).toUpperCase() + dayName.slice(1)}</h6>
+          <i class="wi ${iconClass} display-1 my-2"></i>
+            <div class="mt-2">
+              <div>🌡️ ${Math.round(day.main.temp)} °C</div>
+              <div>💨 ${Math.round(day.wind.speed)} km/h</div>
+              <div>💧 ${day.main.humidity}%</div>
+            </div>
+        </div>
+      `;
+
+      dailyForecast.appendChild(col);
+    });
+
+    //hours forecast
+
+    const hoursMap = {};
+      data.list.forEach(item => {
+      const key = item.dt_txt;
+      hoursMap[key] = item;
+    });
+    const hoursKeys = Object.keys(hoursMap).slice(0, 8); // 24 prochaines heures
+
+     hoursKeys.forEach(key => {
+      const hour = hoursMap[key];
+
+      const date = new Date(hour.dt * 1000);
+      const iconClass = iconMap[hour.weather[0].icon] || "wi-na";
+
+      const col = document.createElement("div");
+      col.className = "col-12 col-md-6 col-lg-3";
+      col.innerHTML = `
+          <div class="card text-center p-2 flex-shrink-0" style="min-width: 120px;">
+            <h6 class="fw-bold">${date.getHours()} H</h6>
+            <i class="wi ${iconClass} display-1 my-2"></i>
+            <div class="mt-2">
+              <div>🌡️ ${Math.round(hour.main.temp)} °C</div>
+              <div>💨 ${Math.round(hour.wind.speed)} km/h</div>
+              <div>💧 ${hour.main.humidity}%</div>
+            </div>
+          </div>
+      `;
+
+      hourlyForecast.appendChild(col);
+    });
 
   } catch (error) {
     console.error("Erreur :", error);
